@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { saveRecentCalculator,} from "../utils/recentCalculators";
 import DilutionCalculator from "../calculators/DilutionCalculator.jsx";
 import MolarityCalculator from "../calculators/MolarityCalculator.jsx";
 import UnitConverter from "../calculators/UnitConverter.jsx";
@@ -327,8 +328,10 @@ export default function CalculatorHub() {
               <p style={{ margin: 0, color: "#5f6b7a", lineHeight: 1.5 }}>{tool.description}</p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
                 <button
-                  onClick={() => setSelectedTool(tool)}
-                  disabled={!isAvailable}
+  onClick={() => {
+    saveRecentCalculator(tool.title);
+    setSelectedTool(tool);}} 
+    disabled={!isAvailable}
                   style={{
                     flex: 1,
                     minWidth: 120,

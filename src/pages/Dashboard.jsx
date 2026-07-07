@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Card from "../components/Card.jsx";
+import { getRecentCalculators } from "../utils/recentCalculators";
 
 const favoriteIcons = {
   "Dilution Calculator": "🧪",
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const [notes, setNotes] = useState([]);
   const [calculations, setCalculations] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [recentCalculators, setRecentCalculators] = useState([]);
 
   useEffect(() => {
     const savedNotes = JSON.parse(localStorage.getItem("lab_notebook") || "[]");
@@ -22,6 +24,9 @@ export default function Dashboard() {
     setNotes(savedNotes);
     setCalculations(savedCalculations);
     setFavorites(savedFavorites);
+
+    // ✅ 여기 추가
+    setRecentCalculators(getRecentCalculators());
   }, []);
 
   const todayActivity = useMemo(() => {
@@ -58,6 +63,7 @@ export default function Dashboard() {
     { label: "Total Calculations", value: calculations.length.toString() },
     { label: "Favorite Calculator", value: favoriteCalculator?.name || "None yet" },
   ];
+
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <section
