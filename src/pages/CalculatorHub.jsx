@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import DilutionCalculator from "../calculators/DilutionCalculator.jsx";
+import MolarityCalculator from "../calculators/MolarityCalculator.jsx";
+import UnitConverter from "../calculators/UnitConverter.jsx";
+import RPMRCFCalculator from "../calculators/RPMRCFCalculator.jsx";
+import CellSeedingCalculator from "../calculators/CellSeedingCalculator.jsx";
+import PCRMixCalculator from "../calculators/PCRMixCalculator.jsx";
+import CFUCalculator from "../calculators/CFUCalculator.jsx";
+import BufferCalculator from "../calculators/BufferCalculator.jsx";
 
 const categories = [
   "All",
@@ -11,6 +19,7 @@ const categories = [
   "Unit Conversion",
 ];
 
+// Data only — no JSX here. Keeps this array safe to later load from an API/DB.
 const calculators = [
   {
     category: "Chemistry",
@@ -134,6 +143,19 @@ const calculators = [
   },
 ];
 
+// Maps a calculator's title to its implemented component.
+// A tool with no entry here is treated as "coming soon".
+const calculatorComponents = {
+  "Dilution Calculator": DilutionCalculator,
+  "Molarity Calculator": MolarityCalculator,
+  "Volume Converter": UnitConverter,
+  "RPM ↔ RCF": RPMRCFCalculator,
+  "Cell Seeding Calculator": CellSeedingCalculator,
+  "PCR Mix Calculator": PCRMixCalculator,
+  "CFU Calculator": CFUCalculator,
+  "Buffer Calculator": BufferCalculator,
+};
+
 export default function CalculatorHub() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
@@ -168,6 +190,8 @@ export default function CalculatorHub() {
       return matchesCategory && matchesSearch;
     });
   }, [activeCategory, search]);
+
+  const ActiveComponent = selectedTool ? calculatorComponents[selectedTool.title] : null;
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
@@ -249,65 +273,93 @@ export default function CalculatorHub() {
               Back to hub
             </button>
           </div>
-          <div style={{ marginTop: 16, padding: 16, borderRadius: 14, background: "#f8fcfb", color: "#345" }}>
-            This calculator workspace is ready for the next implementation step. The hub is now structured for quick access and future calculator integration.
+          <div style={{ marginTop: 16 }}>
+            {ActiveComponent ? (
+              <ActiveComponent />
+            ) : (
+              <div style={{ padding: 16, borderRadius: 14, background: "#f8fcfb", color: "#345" }}>
+                This calculator is coming soon. It's listed here so it's easy to find once it ships.
+              </div>
+            )}
           </div>
         </section>
       ) : null}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
-        {filteredTools.map((tool) => (
-          <article
-            key={tool.title}
-            style={{
-              display: "grid",
-              gap: 12,
-              border: "1px solid #e3ece8",
-              borderRadius: 18,
-              padding: 18,
-              background: "#fff",
-              boxShadow: "0 8px 20px rgba(15, 23, 42, 0.05)",
-            }}
-          >
-            <div style={{ fontSize: 32 }}>{tool.icon}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#2f6a57", letterSpacing: "0.2em", textTransform: "uppercase" }}>
-              {tool.category}
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>{tool.title}</div>
-            <p style={{ margin: 0, color: "#5f6b7a", lineHeight: 1.5 }}>{tool.description}</p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
-              <button
-                onClick={() => setSelectedTool(tool)}
-                style={{
-                  flex: 1,
-                  minWidth: 120,
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "linear-gradient(135deg, #2f6a57 0%, #4b8f7a 100%)",
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Open Calculator
-              </button>
-              <button
-                onClick={() => toggleFavorite(tool.title)}
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #d7e7de",
-                  background: favorites.includes(tool.title) ? "#fef3c7" : "#fff",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                }}
-              >
-                {favorites.includes(tool.title) ? "★" : "☆"}
-              </button>
-            </div>
-          </article>
-        ))}
+        {filteredTools.map((tool) => {
+          const isAvailable = Boolean(calculatorComponents[tool.title]);
+
+          return (
+            <article
+              key={tool.title}
+              style={{
+                display: "grid",
+                gap: 12,
+                border: "1px solid #e3ece8",
+                borderRadius: 18,
+                padding: 18,
+                background: "#fff",
+                boxShadow: "0 8px 20px rgba(15, 23, 42, 0.05)",
+                opacity: isAvailable ? 1 : 0.65,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ fontSize: 32 }}>{tool.icon}</div>
+                {!isAvailable && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#8a6d1f",
+                      background: "#fef3c7",
+                      padding: "4px 8px",
+                      borderRadius: 999,
+                    }}
+                  >
+                    Coming soon
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#2f6a57", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                {tool.category}
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{tool.title}</div>
+              <p style={{ margin: 0, color: "#5f6b7a", lineHeight: 1.5 }}>{tool.description}</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                <button
+                  onClick={() => setSelectedTool(tool)}
+                  disabled={!isAvailable}
+                  style={{
+                    flex: 1,
+                    minWidth: 120,
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: isAvailable ? "linear-gradient(135deg, #2f6a57 0%, #4b8f7a 100%)" : "#e3e8e6",
+                    color: isAvailable ? "#fff" : "#8a938e",
+                    cursor: isAvailable ? "pointer" : "not-allowed",
+                    fontWeight: 600,
+                  }}
+                >
+                  {isAvailable ? "Open Calculator" : "Coming soon"}
+                </button>
+                <button
+                  onClick={() => toggleFavorite(tool.title)}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "1px solid #d7e7de",
+                    background: favorites.includes(tool.title) ? "#fef3c7" : "#fff",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  {favorites.includes(tool.title) ? "★" : "☆"}
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
 
       {filteredTools.length === 0 ? (
